@@ -2,9 +2,8 @@ import {
   Chroma,
   ChromaLibArgs,
 } from '@langchain/community/vectorstores/chroma';
-import { ChatOllama } from '@langchain/ollama';
+import { ChatOllama, OllamaEmbeddings } from '@langchain/ollama';
 import { EmbeddingsInterface } from '@langchain/core/embeddings';
-import { OllamaEmbeddings } from '@langchain/ollama';
 import { PromptTemplate } from '@langchain/core/prompts';
 
 export async function initRagPrompt(context: string, question: string) {
