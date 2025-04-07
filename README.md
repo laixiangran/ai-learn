@@ -1,38 +1,41 @@
-## AI 开发实践代码
+## 说明
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+本项目是 AI 应用开发实践项目，将会涵盖 AI 应用开发中涉及到各种技术，包括但不限于提示工程、RAG、模型微调、Agent等等。
 
-## Getting Started
+### 入门基础系列
 
-First, run the development server:
+- [面对汹涌的AI浪潮，前端开发者该如何破局？](https://mp.weixin.qq.com/s/7OZAuw9QMQWViXi-59k8gA)
+- [前端 x AI：从了解提示工程、RAG和微调开始](https://mp.weixin.qq.com/s/b9ROm1cU41BCFYRlq2Nfbw)
+- [前端 x AI：基于Ollama、DeepSeek、Chroma、LangChain搭建AI应用开发框架](https://mp.weixin.qq.com/s/qtlq-Iu7chqpMEbahnR64w)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### 提示工程系列
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+待更新，敬请期待...
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### RAG系列
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- [RAG系列（一）：一文让你由浅到深搞懂RAG实现](https://mp.weixin.qq.com/s/WbDPo0JM40qasuZzXSdi_Q)
+- [RAG系列（二）：基于 DeepSeek + Chroma + LangChain 开发一个简单 RAG 系统
+](https://mp.weixin.qq.com/s/yZLqv_YJFbK0jYMA_6DMVQ)
 
-## Learn More
+### 模型微调系列
 
-To learn more about Next.js, take a look at the following resources:
+待更新，敬请期待...
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Agent系列
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+待更新，敬请期待...
 
-## Deploy on Vercel
+## 公众号
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+欢迎大家关注我的公众号，分享前端 x AI的前沿技术，注重理论结合实践，助你成为 AI 浪潮中的超级个体！
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+![公众号：燃哥讲AI](https://github.com/user-attachments/assets/bbe15516-62e5-479a-8019-653543c7e455)
+
+
+
+
+
+
+
+
