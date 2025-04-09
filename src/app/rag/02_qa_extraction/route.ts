@@ -30,7 +30,7 @@ export async function GET(request: Request) {
   });
 
   // 文档持久化
-  const baseTextPath = 'src/app/data/base_text.xlsx';
+  const baseTextPath = 'src/app/data/doc_base.xlsx';
   await saveToExcel(
     texts.map((text) => {
       return {
@@ -49,8 +49,8 @@ export async function GET(request: Request) {
   // QA 数据集抽取
   const allData = [];
   const errorData = [];
-  const baseQaPath = `src/app/data/base_qa.xlsx`;
-  const errorTextPath = `src/app/data/error_text.xlsx`;
+  const baseQaPath = `src/app/data/qa_base.xlsx`;
+  const errorTextPath = `src/app/data/doc_error.xlsx`;
   // 本地资源有限，因此单个处理完再处理下一个
   while (baseTextData.length > 0) {
     const baseText = baseTextData[0];
@@ -96,7 +96,7 @@ export async function GET(request: Request) {
   }
 
   // QA 数据集质量检查
-  const checkQaPath = 'src/app/data/check_qa.xlsx';
+  const checkQaPath = 'src/app/data/qa_grade.xlsx';
   const baseQaData = await readFromExcel(baseQaPath);
   const allQas = [];
   while (baseQaData.length > 0) {
@@ -144,8 +144,8 @@ export async function GET(request: Request) {
       }
     }
   });
-  saveToExcel(testData, 'src/app/data/test_qa.xlsx');
-  saveToExcel(trainData, 'src/app/data/train_qa.xlsx');
+  saveToExcel(testData, 'src/app/data/qa_test.xlsx');
+  saveToExcel(trainData, 'src/app/data/qa_train.xlsx');
 
   return Response.json({
     success: true,
