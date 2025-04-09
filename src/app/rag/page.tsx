@@ -14,7 +14,7 @@ export default function Home() {
     if (question.trim() === '') return;
     try {
       const res = await fetch(
-        `http://localhost:3000/rag/generate?question=${question}`
+        `http://localhost:3000/rag/02_simple_rag?question=${question}`
       );
       res.json().then((data) => {
         setMessage(data?.answer);
