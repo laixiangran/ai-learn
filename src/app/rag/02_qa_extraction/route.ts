@@ -131,7 +131,7 @@ export async function GET(request: Request) {
     baseQaData.shift();
   }
 
-  // 筛选出分数大于3的QA并分为测试集（100条）和训练集
+  // 筛选出分数大于3的记录并分为测试集和训练集
   const data = await readFromExcel(checkQaPath);
   const testData = [];
   const trainData = [];
