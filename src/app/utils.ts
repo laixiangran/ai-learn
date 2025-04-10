@@ -18,7 +18,7 @@ export function initOllamaLLM(model = 'qwen2.5:14b') {
   return new ChatOllama({ model });
 }
 
-export function initOllamaEmbeddings(model = 'nomic-embed-text') {
+export function initOllamaEmbeddings(model = 'quentinz/bge-large-zh-v1.5') {
   return new OllamaEmbeddings({ model });
 }
 
