@@ -39,12 +39,11 @@ http://localhost:3000/具体route
 
 待更新，敬请期待...
 
-## 公众号
+## 微信公众号
 
-欢迎大家关注我的公众号，分享前端 x AI的前沿技术，注重理论结合实践，助你成为 AI 浪潮中的超级个体！
+欢迎大家关注我的微信公众号【燃哥讲AI】，分享前端 x AI的前沿技术，注重理论结合实践，助你成为 AI 浪潮中的超级个体！
 
-![公众号：燃哥讲AI](https://github.com/user-attachments/assets/bbe15516-62e5-479a-8019-653543c7e455)
-
+![微信公众号：燃哥讲AI](https://github.com/user-attachments/assets/465ecea4-52e6-4917-baf1-c6debdd19db1)
 
 
 
