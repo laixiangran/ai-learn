@@ -473,9 +473,10 @@ async function bathEvaluator(indexName: string) {
   const path = 'src/app/data/qa_test_20_base_evaluate.json';
   const datas = await readJsonFile(path);
   let res = [];
-  datas.forEach((data) => {
-    delete data[indexName];
-  });
+  // 删除数据中已有的指标评估数据并重新计算
+  // datas.forEach((data) => {
+  //   delete data[indexName];
+  // });
   if (datas[0]?.[indexName]) {
     res = datas;
   } else {
