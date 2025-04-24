@@ -4,7 +4,7 @@ import { initOllamaLLM, saveToExcel, readFromExcel } from '@/app/utils';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
- * 数据加载
+ * 构造 QA 测试数据集
  * @param request
  * @returns
  */
