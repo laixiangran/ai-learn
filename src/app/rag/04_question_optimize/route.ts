@@ -152,10 +152,9 @@ ${question}
  * 2. 逐个分析每个句子（关键信息）是否可归因于给定的上下文；
  * 3. 根据每个句子（关键信息）的得分，计算上下文召回率。
  * @param evaluateData 评估数据
- * @param evaluateLLM 评估 LLM
  * @returns
  */
-async function contextRecallEvaluator(evaluateData, evaluateLLM) {
+async function contextRecallEvaluator(evaluateData) {
   // retrievedContext 检索到的上下文
   // referenceAnswer 参考答案
   // referenceAnswerStatements 参考答案拆分出的多个句子（关键信息）
