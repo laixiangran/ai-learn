@@ -63,6 +63,32 @@ async function addDocuments(texts) {
 }
 
 /**
+ * 知识库构建
+ * @returns
+ */
+async function knowledgeConstruction() {
+  const pdfs = [
+    {
+      path: 'src/app/data/2024少儿编程教育行业发展趋势报告.pdf',
+      category: '少儿编程',
+    },
+    {
+      path: 'src/app/data/2021年低代码行业研究报告.pdf',
+      category: '低代码',
+    },
+  ];
+  for (const pdf of pdfs) {
+    const { path, category } = pdf;
+    const pdfContent = await loadPdf(path);
+    const documents = await splitDocuments(pdfContent);
+    for (const document of documents) {
+      document.metadata.category = category;
+    }
+    await addDocuments(documents);
+  }
+}
+
+/**
  * 将文本拆分为多个句子（关键信息）
  * @param text 待拆分的文本
  * @returns
@@ -116,12 +142,14 @@ async function simulationQuestion(text) {
  * @returns
  */
 async function llmAnswerByQaData(question: string) {
+  // 意图识别
+  const intent = await intentRecognition(question);
+
   // 检索上下文
-  const docs = await chromadb.similaritySearchWithScore(
-    question,
-    topK,
-    vectorFilter
-  );
+  const docs = await chromadb.similaritySearchWithScore(question, topK, {
+    ...vectorFilter,
+    category: `${intent}`,
+  });
   const retrievedContext = docs.map((doc) => doc[0].pageContent);
 
   // 构造提示词
@@ -531,29 +559,25 @@ async function bathEvaluator(indexName: string, qaDatas: any) {
 }
 
 /**
- * 知识库构建
+ * 问题意图识别
+ * @param question
  * @returns
  */
-async function knowledgeConstruction() {
-  const pdfs = [
-    {
-      path: 'src/app/data/2024少儿编程教育行业发展趋势报告.pdf',
-      category: '少儿编程',
-    },
-    {
-      path: 'src/app/data/2021年低代码行业研究报告.pdf',
-      category: '低代码',
-    },
-  ];
-  for (const pdf of pdfs) {
-    const { path, category } = pdf;
-    const pdfContent = await loadPdf(path);
-    const documents = await splitDocuments(pdfContent);
-    for (const document of documents) {
-      document.metadata.category = category;
-    }
-    await addDocuments(documents);
-  }
+async function intentRecognition(question) {
+  const prompt = `
+  你是一个语言专家，你的任务是分析下面的问题是属于哪个领域。
+  说明：
+  1. 无法判断时，默认为“少儿编程”；
+  2. 只需要回答领域名称，不要输出其他内容。
+  领域列表：
+  ["少儿编程", "低代码"]
+  问题：
+  ${question}
+  回答：
+
+  `;
+  const res = await generateModel.invoke(prompt);
+  return res.content;
 }
 
 /**
