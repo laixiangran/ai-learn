@@ -82,6 +82,13 @@ export async function saveJsonFile(
   filePath: string
 ): Promise<any> {
   return new Promise((resolve, reject) => {
+    // 确保文件存在
+    if (!fs.existsSync(filePath)) {
+      fs.writeFileSync(filePath, '', 'utf8');
+      console.log(`File ${filePath} created.`);
+    } else {
+      console.log(`File ${filePath} already exists.`);
+    }
     fs.writeFile(filePath, jsonData, (err) => {
       if (err) {
         reject(err);
