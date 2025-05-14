@@ -98,3 +98,13 @@ export async function saveJsonFile(
     });
   });
 }
+
+export function formatToJson(data: any) {
+  let result = null;
+  try {
+    result = JSON.parse(data);
+  } catch (error) {
+    console.error('error: ', error);
+  }
+  return result;
+}

@@ -4,6 +4,7 @@ import {
   initOllamaEmbeddings,
   readJsonFile,
   saveJsonFile,
+  formatToJson,
 } from '@/app/utils';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
@@ -24,64 +25,6 @@ const vectorFilter = undefined; // 向量查询过滤条件，默认不使用
 // const vectorFilter = {
 //   category: '少儿编程',
 // };
-
-function formatToJson(res) {
-  let result = null;
-  try {
-    result = JSON.parse(res.content);
-  } catch (error) {
-    console.error('error: ', error);
-  }
-  return result;
-}
-
-/**
- * 将文本拆分为多个句子（关键信息）
- * @param text 待拆分的文本
- * @returns
- */
-async function statementSplit(text) {
-  const prompt = `
-  你是一个语言专家，你的任务是将以下文本拆分为多个独立的句子，每个句子独立表达一个完整含义，同时保留原意的逻辑连贯性。
-  
-  说明：
-  1. 严格按以下JSON格式返回：["句子1", "句子2", ...]，不能输出其他无关内容。
-  
-  文本：
-  ${text}
-  
-  回答：
-  
-  `;
-  const res = await generateModel.invoke(prompt);
-  const data = formatToJson(res) || [];
-  console.log('statementSplit: ', data);
-  return data;
-}
-
-/**
- * 根据答案推导出多个模拟问题
- * @param text
- * @returns
- */
-async function simulationQuestion(text) {
-  const prompt = `
-  你是一个语言专家，你的任务是根据以下答案的核心内容来生成3个用户可能问的问题。
-  
-  说明：
-  1. 严格按以下JSON格式返回：["问题1", "问题2", ...]，不能输出其他无关内容。
-  
-  答案：
-  ${text}
-  
-  回答：
-  
-  `;
-  const res = await generateModel.invoke(prompt);
-  const data = formatToJson(res) || [];
-  console.log('simulationQuestions: ', data);
-  return data;
-}
 
 /**
  * pdf文件解析
@@ -119,6 +62,59 @@ async function addDocuments(texts) {
   };
 }
 
+/**
+ * 将文本拆分为多个句子（关键信息）
+ * @param text 待拆分的文本
+ * @returns
+ */
+async function statementSplit(text) {
+  const prompt = `
+  你是一个语言专家，你的任务是将以下文本拆分为多个独立的句子，每个句子独立表达一个完整含义，同时保留原意的逻辑连贯性。
+  
+  说明：
+  1. 严格按以下JSON格式返回：["句子1", "句子2", ...]，不能输出其他无关内容。
+  
+  文本：
+  ${text}
+  
+  回答：
+  
+  `;
+  const res = await generateModel.invoke(prompt);
+  const data = formatToJson(res.content) || [];
+  console.log('statementSplit: ', data);
+  return data;
+}
+
+/**
+ * 根据答案推导出多个模拟问题
+ * @param text
+ * @returns
+ */
+async function simulationQuestion(text) {
+  const prompt = `
+  你是一个语言专家，你的任务是根据以下答案的核心内容来生成3个用户可能问的问题。
+  
+  说明：
+  1. 严格按以下JSON格式返回：["问题1", "问题2", ...]，不能输出其他无关内容。
+  
+  答案：
+  ${text}
+  
+  回答：
+  
+  `;
+  const res = await generateModel.invoke(prompt);
+  const data = formatToJson(res.content) || [];
+  console.log('simulationQuestions: ', data);
+  return data;
+}
+
+/**
+ * LLM 回答问题
+ * @param question 问题
+ * @returns
+ */
 async function llmAnswerByQaData(question: string) {
   // 检索上下文
   const docs = await chromadb.similaritySearchWithScore(
@@ -144,7 +140,9 @@ ${question}
 
   // LLM 回答
   const answerRes = await generateModel.invoke(answerPrompt);
-  return { answer: answerRes.content, retrievedContext };
+  const data = { answer: answerRes.content, retrievedContext };
+  console.log('llmAnswer: ', data);
+  return data;
 }
 
 /**
@@ -198,7 +196,7 @@ ${evaluateData.retrievedContext.join('\n')}
 
 `;
     const llmRes = await evaluateModel.invoke(prompt);
-    const data = formatToJson(llmRes);
+    const data = formatToJson(llmRes.content);
     allRes.push({
       score: data?.score ? +data.score : 0,
       statement,
@@ -263,7 +261,7 @@ ${context}
 
 `;
     const llmRes = await evaluateModel.invoke(prompt);
-    const data = formatToJson(llmRes);
+    const data = formatToJson(llmRes.content);
     allRes.push({
       score: data?.score ? +data.score : 0,
       context,
@@ -331,7 +329,7 @@ ${evaluateData.retrievedContext.join('\n')}
 
 `;
     const llmRes = await evaluateModel.invoke(prompt);
-    const data = formatToJson(llmRes);
+    const data = formatToJson(llmRes.content);
     allRes.push({
       score: data?.score ? +data.score : 0,
       statement,
@@ -401,7 +399,7 @@ ${evaluateData.question}
 
 `;
     const llmRes = await evaluateModel.invoke(prompt);
-    const data = formatToJson(llmRes);
+    const data = formatToJson(llmRes.content);
     allRes.push({
       score: data?.score ? +data.score : 0,
       simulationQuestion,
@@ -473,7 +471,7 @@ ${evaluateData.answer}
 
 `;
     const llmRes = await evaluateModel.invoke(prompt);
-    const data = formatToJson(llmRes);
+    const data = formatToJson(llmRes.content);
     allRes.push({
       score: data?.score ? +data.score : 0,
       statement,
