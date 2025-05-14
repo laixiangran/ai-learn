@@ -45,7 +45,7 @@ async function statementSplit(text, evaluateLLM) {
 
 async function batchStatementSplit(dim: string) {
   const llm = initOllamaLLM('qwen2.5:14b');
-  const path = 'src/app/data/qa_test_20_base_evaluate.json';
+  const path = 'src/app/data/qa_test_20_evaluate_v1.json';
   const datas = await readJsonFile(path);
   const res = [];
   while (datas.length > 0) {
@@ -88,7 +88,7 @@ async function simulationQuestion(text, evaluateLLM) {
 
 async function batchSimulationQuestion() {
   const llm = initOllamaLLM('qwen2.5:14b');
-  const path = 'src/app/data/qa_test_20_base_evaluate.json';
+  const path = 'src/app/data/qa_test_20_evaluate_v1.json';
   const datas = await readJsonFile(path);
   const res = [];
   while (datas.length > 0) {
@@ -182,7 +182,7 @@ async function bathLLMAnswerByQaData() {
   // 将 LLM 回答结果保存到文件中
   await saveJsonFile(
     JSON.stringify(res),
-    'src/app/data/qa_test_20_base_evaluate.json'
+    'src/app/data/qa_test_20_evaluate_v1.json'
   );
   return res;
 }
@@ -500,9 +500,8 @@ async function bathEvaluator(indexName: string) {
     answerCorrectness: answerCorrectnessEvaluator,
   };
   const evaluator = evaluatorMap[indexName];
-  const inputPath = 'src/app/data/qa_test_20.json';
-  const outputPath = 'src/app/data/qa_test_20_base_evaluate.json';
-  const qaDatas = await readJsonFile(inputPath);
+  const qaPath = 'src/app/data/qa_test_20_evaluate_v1.json';
+  const qaDatas = await readJsonFile(qaPath);
   const llm = initOllamaLLM('qwen2.5:14b');
 
   const res = [];
@@ -515,15 +514,19 @@ async function bathEvaluator(indexName: string) {
       data.retrievedContext = retrievedContext;
       data.answer = answer;
     }
-    const evaluateRes = await evaluator(data, llm);
-    res.push({
-      ...data,
-      [indexName]: evaluateRes,
-    });
+    if (data[indexName]) {
+      res.push(data);
+    } else {
+      const evaluateRes = await evaluator(data, llm);
+      res.push({
+        ...data,
+        [indexName]: evaluateRes,
+      });
+    }
   }
 
   // 将 LLM 回答结果保存到文件中
-  await saveJsonFile(JSON.stringify(res), outputPath);
+  await saveJsonFile(JSON.stringify(res), qaPath);
 
   // 计算最终指标数据
   const score =
@@ -532,7 +535,7 @@ async function bathEvaluator(indexName: string) {
       return score;
     }, 0) / res.length;
 
-  return { [indexName]: +score.toFixed(1) };
+  return { [indexName]: +score.toFixed(2) };
 }
 
 /**

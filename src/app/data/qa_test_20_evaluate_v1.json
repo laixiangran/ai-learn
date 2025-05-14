@@ -91,14 +91,14 @@
       ]
     },
     "answerRelevance": {
-      "score": 0.3333333333333333,
+      "score": 0.6666666666666666,
       "data": [
         {
           "score": 1,
           "simulationQuestion": "市场需求增加如何推动少儿编程教育的发展?"
         },
         {
-          "score": 0,
+          "score": 1,
           "simulationQuestion": "政府在支持STEM教育方面采取了哪些措施来促进少儿编程教育?"
         },
         {
@@ -202,11 +202,11 @@
       ]
     },
     "answerRelevance": {
-      "score": 0.3333333333333333,
+      "score": 0.6666666666666666,
       "data": [
         { "score": 1, "simulationQuestion": "国家政策如何影响少儿编程教育？" },
         {
-          "score": 0,
+          "score": 1,
           "simulationQuestion": "哪些省市已经开始实施中小学人工智能及编程教育试点项目？"
         },
         {

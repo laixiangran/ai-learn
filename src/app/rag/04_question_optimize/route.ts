@@ -15,16 +15,16 @@ const evaluateModel = initOllamaLLM('qwen2.5:14b'); // 评估 LLM 模型
 const embeddingModel = initOllamaEmbeddings('nomic-embed-text'); // 向量模型
 const collectionName = 'collection_rag_evaluator_04'; // 向量数据集合名称
 const chromadb = initChroma(collectionName, embeddingModel); // 向量数据库
-const qaPath = 'src/app/data/qa_test_20_evaluate_v1.1.json'; // 评估数据
+const qaPath = 'src/app/data/qa_test_20_evaluate_v3.json'; // 评估数据
 const textSplitterParams = {
   chunkSize: 500, // 文本切分大小
   chunkOverlap: 50, // 文本切分重叠大小
 };
 const topK = 3; // 检索的上下文数量
-const vectorFilter = undefined; // 向量查询过滤条件，默认不使用
-// const vectorFilter = {
-//   category: '少儿编程',
-// };
+// 向量查询过滤条件
+const vectorFilter = {
+  category: '少儿编程',
+};
 
 /**
  * pdf文件解析
