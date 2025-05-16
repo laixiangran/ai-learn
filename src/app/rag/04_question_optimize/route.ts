@@ -15,16 +15,13 @@ const evaluateModel = initOllamaLLM('qwen2.5:14b'); // 评估 LLM 模型
 const embeddingModel = initOllamaEmbeddings('nomic-embed-text'); // 向量模型
 const collectionName = 'collection_rag_evaluator_04'; // 向量数据集合名称
 const chromadb = initChroma(collectionName, embeddingModel); // 向量数据库
-const qaPath = 'src/app/data/qa_test_20_evaluate_v3.json'; // 评估数据
+let qaTestPath = 'src/app/data/qa_test_20.json'; // 测试数据
+const qaEvalPath = 'src/app/data/qa_test_20_evaluate_v6.0.json'; // 评估数据
 const textSplitterParams = {
   chunkSize: 500, // 文本切分大小
   chunkOverlap: 50, // 文本切分重叠大小
 };
 const topK = 3; // 检索的上下文数量
-// 向量查询过滤条件
-const vectorFilter = {
-  category: '少儿编程',
-};
 
 /**
  * pdf文件解析
@@ -89,22 +86,22 @@ async function knowledgeConstruction() {
 }
 
 /**
- * 将文本拆分为多个句子（关键信息）
- * @param text 待拆分的文本
+ * 提取出答案所有的关键信息
+ * @param text 答案文本
  * @returns
  */
 async function statementSplit(text) {
   const prompt = `
-  你是一个语言专家，你的任务是将以下文本拆分为多个独立的句子，每个句子独立表达一个完整含义，同时保留原意的逻辑连贯性。
-  
-  说明：
-  1. 严格按以下JSON格式返回：["句子1", "句子2", ...]，不能输出其他无关内容。
-  
-  文本：
-  ${text}
-  
-  回答：
-  
+你是一个语言专家，你的任务提取出以下答案所有的关键信息。
+
+说明：
+1. 严格按以下JSON格式返回：["关键信息1", "关键信息2", ...]，不能输出其他无关内容。
+
+答案：
+${text}
+
+回答：
+
   `;
   const res = await generateModel.invoke(prompt);
   const data = formatToJson(res.content) || [];
@@ -114,21 +111,22 @@ async function statementSplit(text) {
 
 /**
  * 根据答案推导出多个模拟问题
- * @param text
+ * @param text 答案文本
+ * @param num 模拟问题数量
  * @returns
  */
-async function simulationQuestion(text) {
+async function simulationQuestion(text, num) {
   const prompt = `
-  你是一个语言专家，你的任务是根据以下答案的核心内容来生成3个用户可能问的问题。
-  
-  说明：
-  1. 严格按以下JSON格式返回：["问题1", "问题2", ...]，不能输出其他无关内容。
-  
-  答案：
-  ${text}
-  
-  回答：
-  
+你是一个语言专家，你的任务是根据以下答案的核心内容来生成${num}个用户可能问的问题。
+
+说明：
+1. 严格按以下JSON格式返回：["问题1", "问题2", ...]，不能输出其他无关内容。
+
+答案：
+${text}
+
+回答：
+
   `;
   const res = await generateModel.invoke(prompt);
   const data = formatToJson(res.content) || [];
@@ -137,20 +135,50 @@ async function simulationQuestion(text) {
 }
 
 /**
- * LLM 回答问题
- * @param question 问题
+ * 处理问题及回答问题
+ * @param evaluateData 评估数据
  * @returns
  */
-async function llmAnswerByQaData(question: string) {
-  // 意图识别
-  const intent = await intentRecognition(question);
+async function llmAnswerByQaData(evaluateData) {
+  const allQuestions = [evaluateData.question];
 
-  // 检索上下文
-  const docs = await chromadb.similaritySearchWithScore(question, topK, {
-    ...vectorFilter,
-    category: `${intent}`,
-  });
-  const retrievedContext = docs.map((doc) => doc[0].pageContent);
+  // 意图识别
+  // evaluateData.category = await intentRecognition(evaluateData.question);
+
+  // 同义改写
+  // allQuestions.push(...evaluateData.synonymyQuestions);
+
+  // 多视角分解
+  // allQuestions.push(...evaluateData.subQuestions);
+
+  // 补充上下文
+  allQuestions.push(evaluateData.supplementaryContext);
+
+  // 检索条件
+  // const vectorFilter = undefined;
+  const vectorFilter = {
+    category: evaluateData.category,
+  };
+
+  const allDocs = [];
+  while (allQuestions.length > 0) {
+    const question = allQuestions.shift();
+    const docs = await chromadb.similaritySearchWithScore(
+      question,
+      topK,
+      vectorFilter
+    );
+    allDocs.push(...docs);
+  }
+
+  // 根据文档 id 去重并按文档相似度升序排列，最终取 topK 个文档作为上下文
+  const uniqueDocs = Array.from(
+    new Map(allDocs.map((doc) => [doc[0].id, doc])).values()
+  );
+  uniqueDocs.sort((a, b) => a[1] - b[1]);
+  const retrievedContext = uniqueDocs
+    .slice(0, topK)
+    .map((doc) => doc[0].pageContent);
 
   // 构造提示词
   const answerPrompt = `
@@ -160,7 +188,7 @@ async function llmAnswerByQaData(question: string) {
 ${retrievedContext.join('\n')}
 
 问题：
-${question}
+${evaluateData.question}
 
 回答：
 
@@ -176,18 +204,18 @@ ${question}
 /**
  * 上下文召回率评估器。
  * 实现步骤：
- * 1. 将参考答案拆分成多个句子（关键信息）；
- * 2. 逐个分析每个句子（关键信息）是否可归因于给定的上下文；
- * 3. 根据每个句子（关键信息）的得分，计算上下文召回率。
+ * 1. 将参考答案拆分成多个关键信息；
+ * 2. 逐个分析每个关键信息是否可归因于给定的上下文；
+ * 3. 根据每个关键信息的得分，计算上下文召回率。
  * @param evaluateData 评估数据
  * @returns
  */
 async function contextRecallEvaluator(evaluateData) {
   // retrievedContext 检索到的上下文
   // referenceAnswer 参考答案
-  // referenceAnswerStatements 参考答案拆分出的多个句子（关键信息）
+  // referenceAnswerStatements 参考答案拆分出的多个关键信息
   if (!evaluateData.answer) {
-    const answerObj = await llmAnswerByQaData(evaluateData.question);
+    const answerObj = await llmAnswerByQaData(evaluateData);
     evaluateData = {
       ...evaluateData,
       ...answerObj,
@@ -199,21 +227,21 @@ async function contextRecallEvaluator(evaluateData) {
     );
   }
   const allRes = [];
-  // 逐个分析每个句子（关键信息）是否可归因于给定的上下文
+  // 逐个分析每个关键信息是否可归因于给定的上下文
   const newReferenceAnswerStatements = [
     ...evaluateData.referenceAnswerStatements,
   ];
   while (newReferenceAnswerStatements.length > 0) {
     const statement = newReferenceAnswerStatements.shift();
     const prompt = `
-你是一个语言专家，你的任务是分析句子是否可归因于给定的上下文。
+你是一个语言专家，你的任务是分析关键信息是否可归因于给定的上下文。
 
 说明：
-1. 如果句子不能归因于上下文，则得分为0；
-2. 如果句子能够归因于上下文，则得分为1；
+1. 如果关键信息不能归因于上下文，则得分为0；
+2. 如果关键信息能够归因于上下文，则得分为1；
 3. 严格按以下JSON格式返回：{"score": "得分"}，不能输出其他无关内容。
 
-句子：
+关键信息：
 ${statement}
 
 上下文：
@@ -231,7 +259,7 @@ ${evaluateData.retrievedContext.join('\n')}
     console.log('contextRecallEvaluator: ', allRes);
   }
 
-  // 根据每个句子（关键信息）的得分，计算上下文召回率
+  // 根据每个关键信息的得分，计算上下文召回率
   const score =
     allRes.reduce((score, cur) => {
       score += +cur.score;
@@ -313,16 +341,16 @@ ${context}
 /**
  * 答案忠实度评估器
  * 实现步骤：
- * 1. 将实际答案拆分成多个句子（事实）；
- * 2. 逐个分析每个句子（事实）是否可归因于给定的上下文；
- * 3. 根据每个句子（事实）的得分，计算答案忠实度。
+ * 1. 将实际答案拆分成多个关键信息；
+ * 2. 逐个分析每个关键信息是否可归因于给定的上下文；
+ * 3. 根据每个关键信息的得分，计算答案忠实度。
  * @param evaluateData 评估数据
  * @returns
  */
 async function faithfulnessEvaluator(evaluateData) {
   // retrievedContext 检索到的上下文
   // answer 实际答案
-  // answerStatements 实际答案拆分出的多个句子（事实）
+  // answerStatements 实际答案拆分出的多个关键信息
   if (!evaluateData.answer) {
     const answerObj = await llmAnswerByQaData(evaluateData.question);
     evaluateData = {
@@ -334,19 +362,19 @@ async function faithfulnessEvaluator(evaluateData) {
     evaluateData.answerStatements = await statementSplit(evaluateData.answer);
   }
   const allRes = [];
-  // 逐个分析每个句子（事实）是否可归因于给定的上下文
+  // 逐个分析每个关键信息是否可归因于给定的上下文
   const newAnswerStatements = [...evaluateData.answerStatements];
   while (newAnswerStatements.length > 0) {
     const statement = newAnswerStatements.shift();
     const prompt = `
-你是一个语言专家，你的任务是分析句子是否可归因于给定的上下文。
+你是一个语言专家，你的任务是分析关键信息是否可归因于给定的上下文。
 
 说明：
-1. 如果句子不能归因于上下文，则得分为0；
-2. 如果句子能够归因于上下文，则得分为1；
+1. 如果关键信息不能归因于上下文，则得分为0；
+2. 如果关键信息能够归因于上下文，则得分为1；
 3. 严格按以下JSON格式返回：{"score": "得分"}，不能输出其他无关内容。
 
-句子：
+关键信息：
 ${statement}
 
 上下文：
@@ -363,7 +391,7 @@ ${evaluateData.retrievedContext.join('\n')}
     });
     console.log('faithfulnessEvaluator: ', allRes);
   }
-  // 根据每个句子（事实）的得分，计算答案忠实度
+  // 根据每个关键信息的得分，计算答案忠实度
   const score =
     allRes.reduce((score, cur) => {
       score += +cur.score;
@@ -451,16 +479,16 @@ ${evaluateData.question}
 /**
  * 答案正确性评估器
  * 实现步骤：
- * 1. 将参考答案拆分成多个句子（关键信息）；
- * 2. 逐个分析每个句子（关键信息）是否可归因于给定的实际答案；
- * 3. 根据每个句子（关键信息）的得分，计算答案正确性。
+ * 1. 将参考答案拆分成多个关键信息；
+ * 2. 逐个分析每个关键信息是否可归因于给定的实际答案；
+ * 3. 根据每个关键信息的得分，计算答案正确性。
  * @param evaluateData 评估数据
  * @returns
  */
 async function answerCorrectnessEvaluator(evaluateData) {
   // answer 实际答案
   // referenceAnswer 参考答案
-  // referenceAnswerStatements 参考答案拆分出的多个句子（关键信息）
+  // referenceAnswerStatements 参考答案拆分出的多个关键信息
   if (!evaluateData.answer) {
     const answerObj = await llmAnswerByQaData(evaluateData.question);
     evaluateData = {
@@ -474,21 +502,21 @@ async function answerCorrectnessEvaluator(evaluateData) {
     );
   }
   const allRes = [];
-  // 逐个分析每个句子（关键信息）是否可归因于给定的实际答案
+  // 逐个分析每个关键信息是否可归因于给定的实际答案
   const newReferenceAnswerStatements = [
     ...evaluateData.referenceAnswerStatements,
   ];
   while (newReferenceAnswerStatements.length > 0) {
     const statement = newReferenceAnswerStatements.shift();
     const prompt = `
-你是一个语言专家，你的任务是分析句子是否可归因于给定的实际答案。
+你是一个语言专家，你的任务是分析关键信息是否可归因于给定的实际答案。
 
 说明：
-1. 如果句子不能归因于实际答案，则得分为0；
-2. 如果句子能够归因于实际答案，则得分为1；
+1. 如果关键信息不能归因于实际答案，则得分为0；
+2. 如果关键信息能够归因于实际答案，则得分为1；
 3. 严格按以下JSON格式返回：{"score": "得分"}，不能输出其他无关内容。
 
-句子：
+关键信息：
 ${statement}
 
 实际答案：
@@ -505,7 +533,7 @@ ${evaluateData.answer}
     });
     console.log('answerCorrectnessEvaluator: ', allRes);
   }
-  // 根据每个句子（关键信息）的得分，计算答案正确性
+  // 根据每个关键信息的得分，计算答案正确性
   const score =
     allRes.reduce((score, cur) => {
       score += +cur.score;
@@ -546,7 +574,7 @@ async function bathEvaluator(indexName: string, qaDatas: any) {
   }
 
   // 将 LLM 回答结果保存到文件中
-  await saveJsonFile(JSON.stringify(res), qaPath);
+  await saveJsonFile(JSON.stringify(res), qaEvalPath);
 
   // 计算最终指标数据
   const score =
@@ -559,25 +587,107 @@ async function bathEvaluator(indexName: string, qaDatas: any) {
 }
 
 /**
- * 问题意图识别
- * @param question
+ * 问题优化 - 意图识别
+ * @param question 原始问题
  * @returns
  */
 async function intentRecognition(question) {
   const prompt = `
-  你是一个语言专家，你的任务是分析下面的问题是属于哪个领域。
-  说明：
-  1. 无法判断时，默认为“少儿编程”；
-  2. 只需要回答领域名称，不要输出其他内容。
-  领域列表：
-  ["少儿编程", "低代码"]
-  问题：
-  ${question}
-  回答：
+你是一个语言专家，你的任务是分析下面的问题是属于哪个领域。
+
+说明：
+1. 无法判断时，默认为“少儿编程”；
+2. 只需要回答领域名称，不要输出其他内容。
+
+领域列表：
+["少儿编程", "低代码"]
+
+问题：
+${question}
+
+回答：
 
   `;
   const res = await generateModel.invoke(prompt);
-  return res.content;
+  const data = res.content;
+  console.log('intentRecognition: ', data);
+  return data;
+}
+
+/**
+ * 问题优化 - 同义改写
+ * @param question 原始问题
+ * @param num 同义改写后的同义问题数量
+ * @returns
+ */
+async function synonymyRewritten(question, num = 3) {
+  const prompt = `
+你是一个语言专家，你的任务是将给定的原始问题改写成${num}个语义相同但表达方式不同的问题。
+
+说明：
+1. 严格按以下JSON格式返回：["问题1", "问题2", ...]，不能输出其他无关内容。
+
+原始问题：
+${question}
+
+回答：
+
+  `;
+  const res = await generateModel.invoke(prompt);
+  const data = formatToJson(res.content) || [];
+  console.log('synonymyRewritten: ', data);
+  return data;
+}
+
+/**
+ * 问题优化 - 多视角分解
+ * @param question 原始问题
+ * @param num 多视角分解后的子问题数量
+ * @returns
+ */
+async function subRewritten(question, num = 3) {
+  const prompt = `
+你是一个语言专家，你的任务是将给定的原始问题分解成${num}个不同视角的子问题。
+
+说明：
+1. 严格按以下JSON格式返回：["问题1", "问题2", ...]，不能输出其他无关内容。
+
+原始问题：
+${question}
+
+回答：
+
+  `;
+  const res = await generateModel.invoke(prompt);
+  const data = formatToJson(res.content) || [];
+  console.log('subRewritten: ', data);
+  return data;
+}
+
+/**
+ * 问题优化 - 补充上下文
+ * @param question 原始问题
+ * @param maxLen 补充上下文的最大字符长度
+ * @returns
+ */
+async function contextSupplement(question, maxLen = 200) {
+  const prompt = `
+你是一个语言专家，你的任务是根据给定的原始问题，生成一段与原始问题相关的背景信息。
+
+说明：
+1. 背景信息最大不超过${maxLen}个字符；
+2. 只要输出背景信息，不能输出其他无关内容。
+
+原始问题：
+${question}
+
+回答：
+
+  `;
+  const res = await generateModel.invoke(prompt);
+  const data = res.content;
+  console.log('supplementContext: ', data);
+  return data;
 }
 
 /**
@@ -586,6 +696,33 @@ async function intentRecognition(question) {
  * @returns
  */
 export async function GET(request: Request) {
+  // 评估数据预处理（参考答案关键信息提取/意图识别/同义改写/多视角分解/补充上下文）
+  // const qaDatas = await readJsonFile('src/app/data/qa_test_20.json');
+  // const newDatas = [];
+  // while (qaDatas.length > 0) {
+  //   const data = qaDatas.shift();
+  //   const { question, referenceAnswer } = data;
+  //   const category = await intentRecognition(question);
+  //   const synonymyQuestions = await synonymyRewritten(question);
+  //   const subQuestions = await subRewritten(question);
+  //   const supplementaryContext = await contextSupplement(question);
+  //   const referenceAnswerStatements = await statementSplit(referenceAnswer);
+  //   newDatas.push({
+  //     question,
+  //     synonymyQuestions,
+  //     subQuestions,
+  //     supplementaryContext,
+  //     referenceAnswer,
+  //     referenceAnswerStatements,
+  //     category,
+  //   });
+  // }
+  // await saveJsonFile(
+  //   JSON.stringify(newDatas),
+  //   'src/app/data/qa_test_20_V2.json'
+  // );
+  // return Response.json(newDatas);
+
   // 1. 知识库构建
   // await knowledgeConstruction();
 
@@ -600,8 +737,10 @@ export async function GET(request: Request) {
   ];
   while (indexs.length > 0) {
     const indexName = indexs.shift() || '';
-    const qaDatas = await readJsonFile(qaPath);
+    const qaDatas = await readJsonFile(qaTestPath);
     const indexRes = await bathEvaluator(indexName, qaDatas);
+    qaTestPath = qaEvalPath;
+    console.log(indexName, indexRes);
     data[indexName] = indexRes[indexName];
   }
   console.log('评估得分：', data);
