@@ -9,19 +9,71 @@ import {
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 
+// 评估版本
+const evaluateVersion: string = 'v1.0';
+
 // 基础配置，根据实际情况进行修改
 const generateModel = initOllamaLLM('qwen2.5:14b'); // 生成 LLM 模型
 const evaluateModel = initOllamaLLM('qwen2.5:14b'); // 评估 LLM 模型
 const embeddingModel = initOllamaEmbeddings('nomic-embed-text'); // 向量模型
 const collectionName = 'collection_rag_evaluator_04'; // 向量数据集合名称
 const chromadb = initChroma(collectionName, embeddingModel); // 向量数据库
-let qaTestPath = 'src/app/data/qa_test_20.json'; // 测试数据
-const qaEvalPath = 'src/app/data/qa_test_20_evaluate_v6.0.json'; // 评估数据
+let qaTestPath = 'src/app/data/qa_test_10.json'; // 测试数据
+const qaEvalPath = `src/app/data/qa_test_10_evaluate_${evaluateVersion}.json`; // 评估数据
 const textSplitterParams = {
   chunkSize: 500, // 文本切分大小
   chunkOverlap: 50, // 文本切分重叠大小
 };
-const topK = 3; // 检索的上下文数量
+const commonVectorFilter = {
+  category: '少儿编程',
+};
+// 不同版本对应的配置
+const configs: Record<string, any> = {
+  'v1.0': {
+    topK: 3, // 检索的上下文数量
+    vectorFilter: commonVectorFilter, // 检索条件
+  },
+  'v2.0': {
+    topK: 3,
+    vectorFilter: undefined,
+  },
+  'v2.1': {
+    topK: 6,
+    vectorFilter: undefined,
+  },
+  'v3.0': {
+    topK: 3,
+    vectorFilter: commonVectorFilter,
+  },
+  'v3.1': {
+    topK: 6,
+    vectorFilter: commonVectorFilter,
+  },
+  'v4.0': {
+    topK: 3,
+    vectorFilter: commonVectorFilter,
+  },
+  'v4.1': {
+    topK: 6,
+    vectorFilter: commonVectorFilter,
+  },
+  'v5.0': {
+    topK: 3,
+    vectorFilter: commonVectorFilter,
+  },
+  'v5.1': {
+    topK: 6,
+    vectorFilter: commonVectorFilter,
+  },
+  'v6.0': {
+    topK: 3,
+    vectorFilter: commonVectorFilter,
+  },
+  'v6.1': {
+    topK: 6,
+    vectorFilter: commonVectorFilter,
+  },
+};
 
 /**
  * pdf文件解析
@@ -142,25 +194,24 @@ ${text}
 async function llmAnswerByQaData(evaluateData) {
   const allQuestions = [evaluateData.question];
 
-  // 意图识别
-  // evaluateData.category = await intentRecognition(evaluateData.question);
-
   // 同义改写
-  // allQuestions.push(...evaluateData.synonymyQuestions);
+  if (evaluateVersion.includes('v4')) {
+    allQuestions.push(...evaluateData.synonymyQuestions);
+  }
 
   // 多视角分解
-  // allQuestions.push(...evaluateData.subQuestions);
+  if (evaluateVersion.includes('v5')) {
+    allQuestions.push(...evaluateData.subQuestions);
+  }
 
   // 补充上下文
-  allQuestions.push(evaluateData.supplementaryContext);
-
-  // 检索条件
-  // const vectorFilter = undefined;
-  const vectorFilter = {
-    category: evaluateData.category,
-  };
+  if (evaluateVersion.includes('v6')) {
+    allQuestions.push(evaluateData.supplementaryContext);
+  }
 
   const allDocs = [];
+  const topK = configs[evaluateVersion]?.topK;
+  const vectorFilter = configs[evaluateVersion]?.vectorFilter;
   while (allQuestions.length > 0) {
     const question = allQuestions.shift();
     const docs = await chromadb.similaritySearchWithScore(
@@ -696,45 +747,19 @@ ${question}
  * @returns
  */
 export async function GET(request: Request) {
-  // 评估数据预处理（参考答案关键信息提取/意图识别/同义改写/多视角分解/补充上下文）
-  // const qaDatas = await readJsonFile('src/app/data/qa_test_20.json');
-  // const newDatas = [];
-  // while (qaDatas.length > 0) {
-  //   const data = qaDatas.shift();
-  //   const { question, referenceAnswer } = data;
-  //   const category = await intentRecognition(question);
-  //   const synonymyQuestions = await synonymyRewritten(question);
-  //   const subQuestions = await subRewritten(question);
-  //   const supplementaryContext = await contextSupplement(question);
-  //   const referenceAnswerStatements = await statementSplit(referenceAnswer);
-  //   newDatas.push({
-  //     question,
-  //     synonymyQuestions,
-  //     subQuestions,
-  //     supplementaryContext,
-  //     referenceAnswer,
-  //     referenceAnswerStatements,
-  //     category,
-  //   });
-  // }
-  // await saveJsonFile(
-  //   JSON.stringify(newDatas),
-  //   'src/app/data/qa_test_20_V2.json'
-  // );
-  // return Response.json(newDatas);
-
   // 1. 知识库构建
   // await knowledgeConstruction();
 
   // 2. 指标评估
   const data: any = {};
-  const indexs = [
+  const defaultIndexs = [
     'contextRecall',
     'contextRelevance',
     'faithfulness',
     'answerRelevance',
     'answerCorrectness',
   ];
+  const indexs = [...defaultIndexs];
   while (indexs.length > 0) {
     const indexName = indexs.shift() || '';
     const qaDatas = await readJsonFile(qaTestPath);
@@ -743,7 +768,7 @@ export async function GET(request: Request) {
     console.log(indexName, indexRes);
     data[indexName] = indexRes[indexName];
   }
-  console.log('评估得分：', data);
+  console.log(`版本${evaluateVersion}`, '评估得分：', data);
   return Response.json({
     success: true,
     data,
