@@ -7,7 +7,8 @@ npm run dev
 
 访问：
 ```bash
-http://localhost:3000/具体route
+页面：http://localhost:3000/rag
+接口：http://localhost:3000/rag/01_simple_rag
 ```
 
 ## 项目说明
