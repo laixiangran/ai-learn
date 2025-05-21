@@ -1,4 +1,8 @@
 ## 项目开发
+安装依赖：
+```bash
+npm install
+```
 
 启动：
 ```bash
