@@ -1,3 +1,5 @@
+# AI 应用开发实践项目（TypeScript 版）
+
 ## 项目开发
 安装依赖：
 ```bash
@@ -15,9 +17,15 @@ npm run dev
 接口：http://localhost:3000/rag/01_simple_rag
 ```
 
-## 项目说明
+## 文章连载
 
-本项目是 AI 应用开发实践项目，将会涵盖 AI 应用开发中涉及到各种技术，包括但不限于提示工程、RAG、模型微调、Agent等等。
+本系列文章将会系统性讲解涵盖 AI 应用开发中涉及到的各种技术，包括但不限于提示工程、RAG、模型微调、Agent等等。
+
+### 微信公众号
+
+欢迎大家关注我的微信公众号【燃哥讲AI】，分享前端 x AI的前沿技术，注重理论结合实践，助你成为 AI 浪潮中的超级个体！
+
+![微信公众号：燃哥讲AI](https://github.com/user-attachments/assets/465ecea4-52e6-4917-baf1-c6debdd19db1)
 
 ### 入门基础系列
 
@@ -47,12 +55,6 @@ npm run dev
 ### Agent系列
 
 待更新，敬请期待...
-
-## 微信公众号
-
-欢迎大家关注我的微信公众号【燃哥讲AI】，分享前端 x AI的前沿技术，注重理论结合实践，助你成为 AI 浪潮中的超级个体！
-
-![微信公众号：燃哥讲AI](https://github.com/user-attachments/assets/465ecea4-52e6-4917-baf1-c6debdd19db1)
 
 
 
