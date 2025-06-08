@@ -65,6 +65,18 @@ export async function readFromExcel(filePath: string, sheetIndex: number = 1) {
   return values;
 }
 
+export async function readFile(filePath: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    fs.readFile(filePath, 'utf8', (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+}
+
 export async function readJsonFile(filePath: string): Promise<any> {
   return new Promise((resolve, reject) => {
     fs.readFile(filePath, 'utf8', (err, data) => {

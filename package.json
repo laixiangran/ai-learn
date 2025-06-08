@@ -9,26 +9,28 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@langchain/community": "^0.3.37",
+    "@langchain/community": "^0.3.43",
     "@langchain/core": "^0.3.43",
     "@langchain/ollama": "^0.2.0",
-    "chromadb": "^2.0.1",
+    "chromadb": "2.0.1",
     "exceljs": "^4.4.0",
     "langchain": "^0.3.19",
+    "mammoth": "^1.9.1",
     "next": "15.2.3",
     "pdf-parse": "^1.1.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "word-extractor": "^1.0.4"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.2.3",
-    "@eslint/eslintrc": "^3"
+    "typescript": "^5"
   },
   "repository": "https://github.com/laixiangran/ai-learn.git"
 }
