@@ -1,3 +1,5 @@
+# 重点说明：功能已经迁移至 [ai-learn-python](https://github.com/laixiangran/ai-learn-python) 项目中，后续的功能和示例将优先在 python 项目中维护，请移步！
+
 # AI 应用开发实践项目（TypeScript 版）
 
 ## 项目开发
@@ -51,6 +53,7 @@ npm run dev
 - [RAG 系列（五）：系统评估 - 基于 LLM-as-judge 实现评估系统](https://mp.weixin.qq.com/s?__biz=MzAwMjgzNTAxMA==&mid=2650407071&idx=1&sn=7964554f13eadda3c3ce592ba8a54faf&chksm=82caf7b2b5bd7ea48f46540f7f674ea5accb3680acb208504a2f6ace8bd589a826302aa4d960&cur_album_id=3879147818837032971&scene=189#wechat_redirect)
 - [RAG 系列（六）：问题优化 - 意图识别&同义改写&多视角分解&补充上下文](https://mp.weixin.qq.com/s?__biz=MzAwMjgzNTAxMA==&mid=2650407082&idx=1&sn=8c4e5aff9ef7e31c8f5f750b4efe403f&chksm=82caf787b5bd7e919654692c9ea4d1c5204388388a9bea8bf2af60f6e3f41ca03ec751cd14fe&scene=178&cur_album_id=3920944561060528133&search_click_id=#rd)
 - [RAG 系列（七）：解析优化 - 不同文件类型统一转换成 Markdown](https://mp.weixin.qq.com/s?__biz=MzAwMjgzNTAxMA==&mid=2650407115&idx=1&sn=c37553fbca6e25d4a37498ca4776810a&chksm=82caf7e6b5bd7ef066b166d6471f73a685062f3109bcbe298bbd8331765dda1e553f62537770&cur_album_id=3920944561060528133&scene=189#wechat_redirect)
+- [RAG系列（八）：切分优化 - 基于 Markdown 语法的文档切分](https://mp.weixin.qq.com/s?__biz=MzAwMjgzNTAxMA==&mid=2650407125&idx=1&sn=525e674bb922a42afcecfd589d27d29f&chksm=82caf7f8b5bd7eeeca466f192d4fa5c962e0aeb9553fe5c6ff977fc81d7a5866e54507fbcbaf&cur_album_id=3920944561060528133&scene=189#wechat_redirect)
 
 ### 模型微调系列
 
