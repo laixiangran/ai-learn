@@ -1,4 +1,4 @@
-# 重点说明：功能已经迁移至 [ai-learn-python](https://github.com/laixiangran/ai-learn-python) 项目中，后续的功能和示例将优先在 python 项目中维护，请移步！
+# 重点说明：由于 AI 应用开发的 Python 生态相对比较成熟，因为将该项目迁移至 [ai-learn-python](https://github.com/laixiangran/ai-learn-python)，后续的功能和示例将优先在 ai-learn-python 中维护，烦请移步，谢谢！
 
 # AI 应用开发实践项目（TypeScript 版）
 
