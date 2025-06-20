@@ -1,4 +1,4 @@
-# 重点说明：由于 AI 应用开发的 Python 生态相对比较成熟，因为将该项目迁移至 [ai-learn-python](https://github.com/laixiangran/ai-learn-python)，后续的功能和示例将优先在 ai-learn-python 中维护，烦请移步，谢谢！
+# 重点说明：由于 AI 应用开发的 Python 生态相对比较成熟，因此将该项目迁移至 [ai-learn-python](https://github.com/laixiangran/ai-learn-python)，后续的功能和示例将优先在 ai-learn-python 中维护，烦请移步，谢谢！
 
 # AI 应用开发实践项目（TypeScript 版）
 
@@ -29,7 +29,7 @@ npm run dev
 
 ### 微信公众号
 
-欢迎大家关注我的微信公众号【燃哥讲 AI】，分享前端 x AI 的前沿技术，注重理论结合实践，助你成为 AI 浪潮中的超级个体！
+欢迎大家关注我的微信公众号【燃哥讲 AI】，分享 AI 应用开发的前沿技术，注重理论结合实践，助你成为 AI 浪潮中的超级个体！
 
 ![微信公众号：燃哥讲AI](https://github.com/user-attachments/assets/465ecea4-52e6-4917-baf1-c6debdd19db1)
 
